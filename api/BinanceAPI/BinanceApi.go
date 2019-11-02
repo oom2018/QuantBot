@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+
 	//"os"
 	"strconv"
 	"time"
@@ -37,7 +38,7 @@ func init() {
 }
 
 func buildParamsSigned(postForm *url.Values) error {
-	postForm.Set("recvWindow", "6000000")
+	postForm.Set("recvWindow", "50000")
 	tonce := strconv.FormatInt(time.Now().UnixNano(), 10)[0:13]
 	postForm.Set("timestamp", tonce)
 	payload := postForm.Encode()
@@ -46,6 +47,7 @@ func buildParamsSigned(postForm *url.Values) error {
 	return nil
 }
 
+// GetDepth ...
 func GetDepth(size int, symbol string) (map[string]interface{}, error) {
 	if size > 100 {
 		size = 100

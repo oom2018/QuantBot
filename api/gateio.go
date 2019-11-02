@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,7 +61,7 @@ func NewGateIo(opt Option) Exchange {
 			"QTUM/USDT": 0.001,
 		},
 		records: make(map[string][]Record),
-		host:    "https://data.gateio.io/api2/1/",
+		host:    "https://data.gateio.co/api2/1/",
 		logger:  model.Logger{TraderID: opt.TraderID, ExchangeType: opt.Type},
 		option:  opt,
 
@@ -299,7 +300,7 @@ func (e *GateIo) getTicker(stockType string, sizes ...interface{}) (ticker Ticke
 		err = fmt.Errorf("GetTicker() error, unrecognized stockType: %+v", stockType)
 		return
 	}
-	resp, err := get(fmt.Sprintf("http://data.gateio.io/api2/1/orderBook/%v_usdt", e.stockTypeMap[stockType]))
+	resp, err := get(fmt.Sprintf("http://data.gateio.co/api2/1/orderBook/%v_usdt", e.stockTypeMap[stockType]))
 	if err != nil {
 		err = fmt.Errorf("GetTicker() error, %+v", err)
 		return
@@ -312,9 +313,12 @@ func (e *GateIo) getTicker(stockType string, sizes ...interface{}) (ticker Ticke
 	depthsJSON := json.Get("bids")
 	for i := 0; i < len(depthsJSON.MustArray()); i++ {
 		depthJSON := depthsJSON.GetIndex(i)
+		price,_ := strconv.ParseFloat(depthJSON.GetIndex(0).MustString(), 64)
+		amount,_ := strconv.ParseFloat(depthJSON.GetIndex(1).MustString(), 64)
+
 		ticker.Bids = append(ticker.Bids, OrderBook{
-			Price:  depthJSON.GetIndex(0).MustFloat64(),
-			Amount: depthJSON.GetIndex(1).MustFloat64(),
+			Price:  price,
+			Amount: amount,
 		})
 	}
 	depthsJSON = json.Get("asks")

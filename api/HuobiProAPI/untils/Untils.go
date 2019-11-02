@@ -180,9 +180,9 @@ func ApiKeyPost(mapParams map[string]string, strRequestPath string) string {
 // strSecretKey: 进行签名的密钥
 func CreateSign(mapParams map[string]string, strMethod, strHostUrl, strRequestPath, strSecretKey string) string {
 	// 参数处理, 按API要求, 参数名应按ASCII码进行排序(使用UTF-8编码, 其进行URI编码, 16进制字符必须大写)
-	sortedParams := MapSortByKey(mapParams)
-	encodeParams := MapValueEncodeURI(sortedParams)
-	strParams := Map2UrlQuery(encodeParams)
+	keysSorted, valSorted := MapSortByKey(mapParams)
+	encodeParams := MapValueEncodeURIAry(valSorted)
+	strParams := Map2UrlQueryAry(keysSorted, encodeParams)
 
 	strPayload := strMethod + "\n" + strHostUrl + "\n" + strRequestPath + "\n" + strParams
 
@@ -192,19 +192,17 @@ func CreateSign(mapParams map[string]string, strMethod, strHostUrl, strRequestPa
 // 对Map按着ASCII码进行排序
 // mapValue: 需要进行排序的map
 // return: 排序后的map
-func MapSortByKey(mapValue map[string]string) map[string]string {
-	var keys []string
+func MapSortByKey(mapValue map[string]string) (keys []string, valuesSorted []string) {
 	for key := range mapValue {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 
-	mapReturn := make(map[string]string)
 	for _, key := range keys {
-		mapReturn[key] = mapValue[key]
+		valuesSorted = append(valuesSorted, mapValue[key])
 	}
 
-	return mapReturn
+	return
 }
 
 // 对Map的值进行URI编码
@@ -219,6 +217,18 @@ func MapValueEncodeURI(mapValue map[string]string) map[string]string {
 	return mapValue
 }
 
+// 对Map的值进行URI编码
+// mapParams: 需要进行URI编码的map
+// return: 编码后的map
+func MapValueEncodeURIAry(valSorted []string) (encodedVal []string) {
+	for _, val := range valSorted {
+		valueEncodeURI := url.QueryEscape(val)
+		encodedVal = append(encodedVal, valueEncodeURI)
+	}
+
+	return
+}
+
 // 将map格式的请求参数转换为字符串格式的
 // mapParams: map格式的参数键值对
 // return: 查询字符串
@@ -226,6 +236,19 @@ func Map2UrlQuery(mapParams map[string]string) string {
 	var strParams string
 	for key, value := range mapParams {
 		strParams += (key + "=" + value + "&")
+	}
+
+	if 0 < len(strParams) {
+		strParams = string([]rune(strParams)[:len(strParams)-1])
+	}
+
+	return strParams
+}
+
+func Map2UrlQueryAry(keysSorted, valSorted []string) string {
+	var strParams string
+	for idx, val := range keysSorted {
+		strParams += (val + "=" + valSorted[idx] + "&")
 	}
 
 	if 0 < len(strParams) {

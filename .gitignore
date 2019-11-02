@@ -1,2 +1,10 @@
 data.db
 .git
+
+vendor/
+
+cache/
+
+.idea/
+
+QuantBot
